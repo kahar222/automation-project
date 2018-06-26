@@ -8,14 +8,15 @@ package com.cybertek;
 */
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
+import java.io.File;
+//import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-
 import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.By;
@@ -27,7 +28,6 @@ import org.openqa.selenium.support.ui.Select;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
@@ -50,7 +50,6 @@ public class MockarooDataValidation {
 			e.printStackTrace();
 			return false;
 		}
-
 		return true;
 	}
 
@@ -128,71 +127,124 @@ public class MockarooDataValidation {
 	@Test(priority = 3)
 	public void runner() throws IOException {
 
-		List<String> countries = new ArrayList<String>();
+		// 17. Open the downloaded file using BufferedReader.
 
-		FileReader fr = new FileReader("/Users/anaf/Downloads/MOCK_DATA.csv");
+		List<String> countries = new ArrayList<String>();
+		FileReader fr = new FileReader("C:\\Users\\Zghiban\\Downloads\\MOCK_DATA.csv");
 		BufferedReader br = new BufferedReader(fr);
 		String line = "";
-		int count = 0;
 		while ((line = br.readLine()) != null) {
 			countries.add(line);
-			count++;
 		}
+		br.close();
+		fr.close();
+		deleteFile();
+
+		// 18. Assert that first row is matching with Field names that we selected.
+
 		String[] arr = countries.get(0).split(",");
 		System.out.println(arr[0] + " " + arr[1]);
 
 		Assert.assertTrue((arr[0] + " " + arr[1]).equals("City Country"));
 
-		Assert.assertTrue(count == 1001);
-		List<String> countries1 = new ArrayList<String>();
-		List<String> cities = new ArrayList<String>();
+		countries.remove(0);
+
+		// 19. Assert that there are 1000 records
+
+		Assert.assertTrue(countries.size() == 1000);
+
+		// 20. Add all countries to Countries ArrayList
+
+		List<String> countriesList = new ArrayList<String>();
 		for (int i = 1; i < countries.size(); i++) {
 			String[] arr1 = countries.get(i).split(",");
-			cities.add(arr1[0]);
-			countries1.add(arr1[1]);
+			countriesList.add(arr1[1]);
 		}
-		// System.out.println(cities);
 
-		Collections.sort(cities);
-		Collections.sort(countries);
-		int MAX = 0;
-		String longCity = "";
-		for (int i = 0; i < cities.size(); i++) {
-			if (cities.get(i).length() > MAX)
-				MAX = cities.get(i).length();
-			longCity = cities.get(i);
-		}
-		System.out.println(longCity + "  " + MAX);
+		// 21. From file add all Cities to Cities ArrayList
 
-		int MIN = MAX;
-		String shortCity = "";
-		for (int i = 0; i < cities.size(); i++) {
-			if (cities.get(i).length() < MIN)
-				MIN = cities.get(i).length();
-			shortCity = cities.get(i);
+		List<String> citiesList = new ArrayList<String>();
+		for (int i = 1; i < countries.size(); i++) {
+			String[] arr1 = countries.get(i).split(",");
+			citiesList.add(arr1[0]);
 		}
-		System.out.println(shortCity + " " + MIN);
-		
+
+		// 22. Sort all cities and find the city with the longest name and shortest name
+		Collections.sort(citiesList, new Comparator<String>() {
+			
+			public int compare(String s1, String s2) {
+				return s1.length() - s2.length();
+			}
+		});
+		System.out.println();
+		String longCity = citiesList.get(citiesList.size() - 1);
+		int MAX = longCity.length();
+
+		String shortCity = citiesList.get(0);
+		int MIN = shortCity.length();
+
+		System.out.println("Long city name length: " + longCity + "  " + MAX);
+		System.out.println("Short city name length: " + shortCity + " " + MIN);
+
+		// 23. In Countries ArrayList, find how many times each Country is mentioned.
+		// and print out
+
+		System.out.println("Countries frequency by cities: ");
+		HashSet<String> Countries = new HashSet<String>(countriesList);
+		for (String country : Countries) {
+			System.out.println(country + "-" + Collections.frequency(countriesList, country));
+		}
+
+		// 24. From file add all Cities to citiesSet HashSet
+
+		HashSet<String> citySet = new HashSet<String>(citiesList);
+
+		// 25. Count how many unique cities are in Cities ArrayList and ...
+
 		List<String> uniqueCities = new ArrayList<String>();
-		for (String city : cities) {
-			if(!uniqueCities.contains(city))
+		for (String city : citiesList) {
+			if (!uniqueCities.contains(city))
 				uniqueCities.add(city);
 		}
-		
-		HashSet<String> citySet = new HashSet<String>(cities);
+
+		// .. assert that it is matching with the count of citiesSet HashSet.
+
 		Assert.assertEquals(uniqueCities.size(), citySet.size());
-		
+		System.out.println("uniqueCities numbers: " + uniqueCities.size());
+		System.out.println("citySet numbers: " + citySet.size());
+
+		// 26. Add all Countries to countrySet HashSet
+
+		HashSet<String> countrySet = new HashSet<String>(countriesList);
+
+		// 27. Count how many unique countries are in Countries ArrayList ...
+
 		List<String> uniqueCountries = new ArrayList<String>();
-		for (String country : countries) {
-			if(!uniqueCountries.contains(country))
+		for (String country : countriesList) {
+			if (!uniqueCountries.contains(country))
 				uniqueCountries.add(country);
 		}
-		
-		Assert.assertEquals(uniqueCities.size(), citySet.size());
+
+		// ...and assert that it is matching with the count of countrySet HashSet.
+
+		Assert.assertEquals(uniqueCountries.size(), countrySet.size());
+		System.out.println("uniqueCountries number : " + uniqueCountries.size());
+		System.out.println("Countries number: " + countrySet.size());
+	}
+
+	public void deleteFile() {
+
+		File file = new File("C:\\Users\\Zghiban\\Downloads\\MOCK_DATA.csv");
+
+		if (file.delete()) {
+			System.out.println(file.getName() + " is deleted!");
+		} else {
+			System.out.println("Delete operation is failed.");
+		}
 	}
 
 	@AfterClass
-	public void tearDown() throws InterruptedException {
+	public void clean() throws InterruptedException {
 		Thread.sleep(3000);
 		driver.close();
 	}
