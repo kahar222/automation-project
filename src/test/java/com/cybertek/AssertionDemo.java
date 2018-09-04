@@ -8,6 +8,7 @@ public class AssertionDemo {
 	@AfterMethod
 	public void tearDown(){
 		System.out.println("Cleaning up");
+		driver.close();
 	}
 	@Test
 	public void testOne(){
